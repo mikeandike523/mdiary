@@ -1,0 +1,39 @@
+#!/bin/zsh
+
+dn="$(dirname "$(realpath "$0")")"
+
+cd "$dn"
+
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install -r requirements.txt
+deactivate
+
+chmod +x __python
+chmod +x mdiary
+
+
+# The command to add to .zshrc
+command="export PATH=\"\$PATH:\$HOME/.local/bin\""
+
+# Path to the .zshrc file
+zshrc="${HOME}/.zshrc"
+
+# Check if .zshrc exists
+if [[ -f "$zshrc" ]]; then
+  # Check if .zshrc does not contain the exact match of $command
+  if ! grep -Fxq "$command" "$zshrc"; then
+    # Append $command to .zshrc
+    echo "$command" >> "$zshrc"
+    echo "Command added to $zshrc."
+  else
+    echo "Command already exists in $zshrc."
+  fi
+else
+  echo "$zshrc does not exist."
+fi
+
+rm -f $HOME/.local/bin/mdiary
+ln -s "$dn/mdiary" "$HOME/.local/bin/mdiary"
+
+echo "Please run \`sourace ~/.zshrc\`"

@@ -1,0 +1,20 @@
+#!/bin/zsh
+
+# Get the directory name of the script location
+dn="$(dirname "$(realpath "$0")")"
+
+# Set PYTHONPATH to include $dn at the beginning if it is not already set, otherwise append it
+if [[ -z "$PYTHONPATH" ]]; then
+    export PYTHONPATH="$dn"
+else
+    export PYTHONPATH="$dn:$PYTHONPATH"
+fi
+
+# Activate the virtual environment
+source "$dn/venv/bin/activate"
+
+# Run the Python script with passed arguments
+python3 "$@"
+
+# Deactivate the virtual environment
+deactivate

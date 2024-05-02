@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+dn="$(dirname "$(realpath "$0")")"
+
+"$dn/__python" "$dn/main.py" "$@"

@@ -4,13 +4,7 @@ dn="$(dirname "$(realpath "$0")")"
 
 cd "$dn"
 
-python3 -m venv venv
-source venv/bin/activate
-python3 -m pip install -r requirements.txt
-deactivate
 
-chmod +x __python
-chmod +x mdiary
 
 
 # The command to add to .zshrc
@@ -36,4 +30,39 @@ fi
 rm -f $HOME/.local/bin/mdiary
 ln -s "$dn/mdiary" "$HOME/.local/bin/mdiary"
 
-echo "Please run \`sourace ~/.zshrc\`"
+# Check for Homebrew installation and install if it's not installed
+which brew >/dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Function to install a package if it's not already installed
+function install_if_not_installed {
+  package=$1
+  if brew list --formula | grep -q "^${package}$"; then
+    echo "${package} is already installed."
+  else
+    echo "Installing ${package}..."
+    brew install "${package}"
+  fi
+}
+
+
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 -c "import sys; import os; print(os.path.realpath(sys.executable))"
+deactivate
+
+chmod +x __python
+chmod +x mdiary
+
+# Use the function to check and install packages
+install_if_not_installed "python3"
+install_if_not_installed "pango"
+install_if_not_installed "cairo"
+install_if_not_installed "gdk-pixbuf"
+install_if_not_installed "libffi"
+install_if_not_installed "gobject-introspection"
+
+echo "Please run \`source ~/.zshrc\`"
+
+# if needed for debugging and testing the installer
+# brew uninstall --ignore-dependencies --force python3 pango cairo gdk-pixbuf libffi gobject-introspection

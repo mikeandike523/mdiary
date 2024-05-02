@@ -1,13 +1,31 @@
 import os
 import datetime
+import tempfile
+import shutil
 
 import click
+import PyPDF2
+
+from src.utils.diary_entry_pdf import write_diary_entry_pdf
 
 
 @click.group()
 def cli():
     pass
 
+
+def merge_pdfs(paths, output):
+    pdf_writer = PyPDF2.PdfWriter()
+
+    for path in paths:
+        pdf_reader = PyPDF2.PdfReader(path)
+        for page in range(len(pdf_reader.pages)):
+            # Add each page to the writer object
+            pdf_writer.add_page(pdf_reader.pages[page])
+
+    # Write out the merged PDF
+    with open(output, 'wb') as out:
+        pdf_writer.write(out)
 
 class DatedFile:
 
@@ -40,12 +58,23 @@ def perform_export(dirpath, outpath, date_last_export, order_by, reversed):
         else dated_file_objects
     )
     if date_last_export is not None:
-        print(f"found {len(relevant_file_objects)} after date {date_last_export.date().isoformat()}")
-    print(f"Generating, stitching, and saving {len(relevant_file_objects)} files to \"{outpath}\"")
-    sorted_date_objects = sorted(relevant_file_objects, key=lambda x: x.date, reverse=reversed)
+        print(
+            f"found {len(relevant_file_objects)} after date {date_last_export.date().isoformat()}"
+        )
+    print(
+        f'Generating, stitching, and saving {len(relevant_file_objects)} files to "{outpath}"'
+    )
+    sorted_date_objects = sorted(
+        relevant_file_objects, key=lambda x: x.date, reverse=reversed
+    )
 
-    print("")
-    print("\n".join([x.path for x in sorted_date_objects]))
+    with tempfile.TemporaryDirectory() as tempdir:
+
+        for i, obj in enumerate(sorted_date_objects):
+            write_diary_entry_pdf(obj.path, tempdir, f"{i}.pdf")
+        filepaths = [os.path.join(tempdir, f"{i}.pdf") for i in range(len(sorted_date_objects))]
+        merge_pdfs(filepaths, outpath)
+
 
 @cli.command()
 @click.argument("dirpath", type=str, required=False, default=None)

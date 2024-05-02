@@ -1,2 +1,5 @@
 click
 termcolor
+markdown
+pdfkit
+PyPDF2
